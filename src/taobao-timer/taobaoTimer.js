@@ -1,7 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import './App.css';
-
+import './taobaoTimer.css';
 
 
 class App extends React.Component{
