@@ -7,29 +7,31 @@ class App extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      date: new Date(),
+      standardTime: '',
+      standardTimeString: '',
       taobaoTime: '',
       taobaoTimeString: '',
-      timer: 1000,
-      errorDisplay: false
+      timer: 100
     };
     // methods
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.setTimer = this.setTimer.bind(this);
+    this.setTaobaoTimer = this.setTaobaoTimer.bind(this);
     this.parseTimer = this.parseTimer.bind(this);
   }
 
   componentDidMount(){
-    // this.setTimer(1000)
+    this.setTaobaoTimer(100)
+    this.setStandardTimer(100)
   }
 
   componentWillUnmount(){
-    clearInterval(this.timerID)
+    clearInterval(this.taobaoTimer)
+    clearInterval(this.standardTimer)
   }
 
-  setTimer(time){
-    this.timerID = setInterval(() => {
+  setTaobaoTimer(time){
+    this.taobaoTimer = setInterval(() => {
       axios.post('/taobao/rest/api3.do?api=mtop.common.getTimestamp')
         .then(res => {
           this.setState({
@@ -43,21 +45,31 @@ class App extends React.Component{
     }, time);
   }
 
+  setStandardTimer(time){
+    this.standardTimer = setInterval(() => {
+      let now = Date.now()
+      this.setState({
+        standardTime: now,
+        standardTimeString: this.handleDate(now)
+      })
+    }, time);
+  }
+
   handleChange(event){
-    this.state.errorDisplay = !event.target.value;
+    let value = event.target.value
     this.setState({
-      timer: event.target.value
+      timer: value
     })
   }
 
   handleSubmit(event){
-    clearInterval(this.timerID);
-    this.setTimer(this.state.timer);
+    clearInterval(this.taobaoTimer);
+    this.setTaobaoTimer(this.state.timer);
     event.preventDefault();
   }
 
   parseTimer(){
-    clearInterval(this.timerID);
+    clearInterval(this.taobaoTimer);
   }
 
   handleDate(time){
@@ -67,7 +79,7 @@ class App extends React.Component{
       let M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
       let D = date.getDate() + ' ';
       let h = date.getHours() + ':';
-      let m = date.getMinutes() + ':';
+      let m = (date.getMinutes() < 10 ? '0' + date.getMinutes() + ':' : date.getMinutes() + ':');
       let s = date.getSeconds() + ':';
       let mi = date.getMilliseconds();
       return (Y + M + D + h + m + s + mi)
@@ -92,13 +104,18 @@ class App extends React.Component{
             <div>
               <input type="text" value={this.state.timer} onChange={this.handleChange} />
             </div>
-            <span style={{display: !this.state.errorDisplay && 'none'}}>请求时间不可以为空(0)</span>
           </label>
           <button onClick={this.handleSubmit}>开始</button>
           <button onClick={this.parseTimer}>暂停时间请求</button>
         </div>
         <hr />
-        <div><b>标准时间：</b>{this.state.date.getTime()}</div>
+        <div><b>标准时间：</b>
+          <div>
+            {this.state.standardTime}
+            <br />
+            {this.state.standardTimeString}
+          </div>
+        </div>
       </div>
     )
   }
